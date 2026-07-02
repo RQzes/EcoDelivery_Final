@@ -2,3 +2,4 @@ target/
 *.class
 nbproject/private/
 .DS_Store
+final.zip
