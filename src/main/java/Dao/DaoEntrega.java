@@ -2,6 +2,7 @@ package Dao;
 
 import Conexion.ConexionBD;
 import Modelo.Entrega;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +11,12 @@ import java.util.ArrayList;
 public class DaoEntrega {
 
     ConexionBD cn = new ConexionBD();
+
+    private String mensajeProceso = "";
+
+    public String getMensajeProceso() {
+        return mensajeProceso;
+    }
 
     public boolean insertar(Entrega e) {
 
@@ -124,86 +131,42 @@ public class DaoEntrega {
             return false;
         }
     }
-    
-     public boolean procesarEntrega(Entrega e) {
 
-        String sqlEntrega = "INSERT INTO entrega(codigo, fecha, tiempo, co2, codigo_vehiculo, codigo_pedido, estado) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String sqlPedido = "UPDATE pedido SET estado='EN ENTREGA' WHERE codigo=?";
-        String sqlVehiculo = "UPDATE vehiculo SET estado='OCUPADO' WHERE codigo=? AND UPPER(estado)='DISPONIBLE'";
+    public boolean procesarEntrega(Entrega e) {
 
-        java.sql.Connection con = null;
-        java.sql.PreparedStatement psEntrega = null;
-        java.sql.PreparedStatement psPedido = null;
-        java.sql.PreparedStatement psVehiculo = null;
+        String sql = "{CALL sp_procesar_entrega(?, ?, ?, ?, ?, ?)}";
 
-        try {
-            con = cn.getConexion();
+        try (
+            Connection con = cn.getConexion();
+            CallableStatement cs = con.prepareCall(sql)
+        ) {
 
-            con.setAutoCommit(false);
+            cs.setInt(1, e.getCodigo());
+            cs.setString(2, e.getFecha());
+            cs.setInt(3, e.getCodigoPedido());
+            cs.setInt(4, e.getCodigoVehiculo());
 
-            psVehiculo = con.prepareStatement(sqlVehiculo);
-            psVehiculo.setInt(1, e.getCodigoVehiculo());
+            cs.registerOutParameter(5, java.sql.Types.INTEGER);
+            cs.registerOutParameter(6, java.sql.Types.VARCHAR);
 
-            int filasVehiculo = psVehiculo.executeUpdate();
+            cs.execute();
 
-            if (filasVehiculo == 0) {
-                con.rollback();
-                System.out.println("El vehículo no está disponible");
-                return false;
+            int ok = cs.getInt(5);
+            mensajeProceso = cs.getString(6);
+
+            if (mensajeProceso == null || mensajeProceso.trim().isEmpty()) {
+                mensajeProceso = "El procedimiento almacenado no devolvió mensaje.";
             }
 
-            psEntrega = con.prepareStatement(sqlEntrega);
-            psEntrega.setInt(1, e.getCodigo());
-            psEntrega.setString(2, e.getFecha());
-            psEntrega.setDouble(3, e.getTiempo());
-            psEntrega.setDouble(4, e.getCo2());
-            psEntrega.setInt(5, e.getCodigoVehiculo());
-            psEntrega.setInt(6, e.getCodigoPedido());
-            psEntrega.setString(7, e.getEstado());
+            System.out.println("Resultado SP: " + ok);
+            System.out.println("Mensaje SP: " + mensajeProceso);
 
-            psEntrega.executeUpdate();
-
-            psPedido = con.prepareStatement(sqlPedido);
-            psPedido.setInt(1, e.getCodigoPedido());
-            psPedido.executeUpdate();
-
-            con.commit();
-
-            System.out.println("Entrega procesada correctamente");
-            return true;
+            return ok == 1;
 
         } catch (Exception ex) {
-
-            try {
-                if (con != null) {
-                    con.rollback();
-                }
-            } catch (Exception errorRollback) {
-                System.out.println("Error rollback: " + errorRollback.getMessage());
-            }
-
-            System.out.println("Error procesar entrega: " + ex.getMessage());
+            mensajeProceso = "Error procesar entrega con SP: " + ex.getMessage();
+            System.out.println(mensajeProceso);
             return false;
-
-        } finally {
-
-            try {
-                if (psEntrega != null) psEntrega.close();
-                if (psPedido != null) psPedido.close();
-                if (psVehiculo != null) psVehiculo.close();
-
-                if (con != null) {
-                    con.setAutoCommit(true);
-                    con.close();
-                }
-
-            } catch (Exception ex) {
-                System.out.println("Error cerrando conexión: " + ex.getMessage());
-            }
         }
     }
 }
-
-
-
-

@@ -95,7 +95,6 @@ public void limpiar() {
         jScrollPane1 = new javax.swing.JScrollPane();
         tblEntregas = new javax.swing.JTable();
         btnProcesarEntrega = new javax.swing.JButton();
-        btnCalcularEntrega = new javax.swing.JButton();
 
         setClosable(true);
         setIconifiable(true);
@@ -153,9 +152,6 @@ public void limpiar() {
         btnProcesarEntrega.setText("Procesar entrega");
         btnProcesarEntrega.addActionListener(this::btnProcesarEntregaActionPerformed);
 
-        btnCalcularEntrega.setText("Calcular entrega");
-        btnCalcularEntrega.addActionListener(this::btnCalcularEntregaActionPerformed);
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -206,8 +202,6 @@ public void limpiar() {
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnProcesarEntrega)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnCalcularEntrega)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
             .addGroup(layout.createSequentialGroup()
                 .addGap(48, 48, 48)
@@ -245,8 +239,7 @@ public void limpiar() {
                     .addComponent(btnModificar)
                     .addComponent(btnEliminar)
                     .addComponent(btnLimpiar)
-                    .addComponent(btnProcesarEntrega)
-                    .addComponent(btnCalcularEntrega))
+                    .addComponent(btnProcesarEntrega))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 285, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -368,55 +361,55 @@ if (fila >= 0) {
     }//GEN-LAST:event_tblEntregasMouseClicked
 
     private void btnProcesarEntregaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProcesarEntregaActionPerformed
-        try {
-    Entrega en = new Entrega();
+         try {
 
-    en.setCodigo(Integer.parseInt(txtCodigo.getText().trim()));
-    en.setFecha(txtFecha.getText().trim());
-    en.setTiempo(Double.parseDouble(txtTiempo.getText().trim()));
-    en.setCo2(Double.parseDouble(txtCo2.getText().trim()));
-    en.setCodigoVehiculo(Integer.parseInt(txtCodigoVehiculo.getText().trim()));
-    en.setCodigoPedido(Integer.parseInt(txtCodigoPedido.getText().trim()));
-    en.setEstado("EN ENTREGA");
+        if (txtCodigo.getText().trim().isEmpty()
+                || txtFecha.getText().trim().isEmpty()
+                || txtCodigoVehiculo.getText().trim().isEmpty()
+                || txtCodigoPedido.getText().trim().isEmpty()) {
 
-    DaoEntrega daoTransaccion = new DaoEntrega();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Complete Código, Fecha, Código Vehículo y Código Pedido"
+            );
+            return;
+        }
 
-    boolean procesado = daoTransaccion.procesarEntrega(en);
+        Entrega en = new Entrega();
 
-    if (procesado) {
-        javax.swing.JOptionPane.showMessageDialog(
-                this,
-                "Entrega procesada correctamente.\n"
-                + "Pedido actualizado a EN ENTREGA.\n"
-                + "Vehículo actualizado a OCUPADO."
-        );
+        en.setCodigo(Integer.parseInt(txtCodigo.getText().trim()));
+        en.setFecha(txtFecha.getText().trim());
+        en.setCodigoVehiculo(Integer.parseInt(txtCodigoVehiculo.getText().trim()));
+        en.setCodigoPedido(Integer.parseInt(txtCodigoPedido.getText().trim()));
 
-        listar();
-        limpiar();
+        boolean procesado = dao.procesarEntrega(en);
 
-    } else {
-        javax.swing.JOptionPane.showMessageDialog(
-                this,
-                "No se pudo procesar la entrega.\n"
-                + "Verifique que el vehículo esté DISPONIBLE."
-        );
-    }
-
-} catch (Exception ex) {
-    javax.swing.JOptionPane.showMessageDialog(
+if (procesado) {
+    JOptionPane.showMessageDialog(
             this,
-            "Error al procesar entrega: " + ex.getMessage()
+            dao.getMensajeProceso()
     );
-}        // TODO add your handling code here:
-    }//GEN-LAST:event_btnProcesarEntregaActionPerformed
 
-    private void btnCalcularEntregaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCalcularEntregaActionPerformed
-                                // TODO add your handling code here:
-    }//GEN-LAST:event_btnCalcularEntregaActionPerformed
+    listar();
+    limpiar();
+
+} else {
+    JOptionPane.showMessageDialog(
+            this,
+            dao.getMensajeProceso()
+    );
+}
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Error al procesar entrega: " + ex.getMessage()
+        );
+    }        // TODO add your handling code here:
+    }//GEN-LAST:event_btnProcesarEntregaActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnCalcularEntrega;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnGuardar;
     private javax.swing.JButton btnLimpiar;

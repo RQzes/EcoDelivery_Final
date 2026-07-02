@@ -114,13 +114,13 @@ public void limpiar() {
 
         tblPedidos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
             },
             new String [] {
-                "Código", "Descripción", "Código Cliente", "Estado"
+                "Código", "Descripción", "Distancia", "Código Cliente", "Estado"
             }
         ));
         tblPedidos.addMouseListener(new java.awt.event.MouseAdapter() {
